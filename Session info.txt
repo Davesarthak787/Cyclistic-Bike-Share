@@ -1,0 +1,23 @@
+R version 4.1.0 (2021-05-18)
+Platform: x86_64-w64-mingw32/x64 (64-bit)
+Running under: Windows 10 x64 (build 19042)
+
+Matrix products: default
+
+locale:
+[1] LC_COLLATE=English_India.1252  LC_CTYPE=English_India.1252    LC_MONETARY=English_India.1252
+[4] LC_NUMERIC=C                   LC_TIME=English_India.1252    
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+loaded via a namespace (and not attached):
+ [1] rstudioapi_0.13   knitr_1.33        magrittr_2.0.1    tidyselect_1.1.1  munsell_0.5.0    
+ [6] colorspace_2.0-2  R6_2.5.0          rlang_0.4.11      fansi_0.5.0       dplyr_1.0.7      
+[11] tools_4.1.0       grid_4.1.0        gtable_0.3.0      xfun_0.24         utf8_1.2.1       
+[16] cli_3.0.0         DBI_1.1.1         htmltools_0.5.1.1 ellipsis_0.3.2    yaml_2.2.1       
+[21] digest_0.6.27     assertthat_0.2.1  tibble_3.1.2      lifecycle_1.0.0   crayon_1.4.1     
+[26] purrr_0.3.4       ggplot2_3.3.5     vctrs_0.3.8       evaluate_0.14     glue_1.4.2       
+[31] rmarkdown_2.9     compiler_4.1.0    pillar_1.6.1      generics_0.1.0    scales_1.1.1     
+[36] pkgconfig_2.0.3  
+> 
