@@ -55,12 +55,11 @@ ROCCC approach is used to determine the credibility of the data
 We will start by installing the required packages.
 
 ```{r}
-#remove comment to install packages if needed.
-install.packages("tidyverse")
-install.packages("lubridate")
-install.packages("ggplot2")
-install.packages("janitor")
-install.packages("Rcpp")
+install.packages("tidyverse", repos = "http://cran.us.r-project.org")
+install.packages("lubridate", repos = "http://cran.us.r-project.org")
+install.packages("ggplot2", repos = "http://cran.us.r-project.org")
+install.packages("janitor", repos = "http://cran.us.r-project.org")
+install.packages("Rcpp" , repos = "http://cran.us.r-project.org")
 library(Rcpp)
 library(tidyverse)
 library(lubridate)
@@ -86,7 +85,6 @@ m03_2021 <- read.csv("/Users/sarthak.shiben.dev/Desktop/Case Study/Last 12 month
 m04_2021 <- read.csv("/Users/sarthak.shiben.dev/Desktop/Case Study/Last 12 months/CSV/202104-divvy-tripdata.csv")
 m05_2021 <- read.csv("/Users/sarthak.shiben.dev/Desktop/Case Study/Last 12 months/CSV/202105-divvy-tripdata.csv")
 m06_2021 <- read.csv("/Users/sarthak.shiben.dev/Desktop/Case Study/Last 12 months/CSV/202106-divvy-tripdata.csv")
-head(m10_2020)
 ```
 
 ### Step 3: Wrangling and combining the data into one single file
@@ -108,7 +106,7 @@ colnames(m04_2021)
 colnames(m05_2021)
 colnames(m06_2021)
 ```
-We see that the column names are consistent in all the individual files.\
+We see that the column names are consistent in all the individual files.
 
 Now we check for any difference/incongruencies in the structures of the files.
 
@@ -144,6 +142,7 @@ m10_2020 <- mutate(m10_2020, start_station_id = as.character(start_station_id),
                    end_station_id = as.character(end_station_id))
 m11_2020 <- mutate(m11_2020, start_station_id = as.character(start_station_id),
                    end_station_id = as.character(end_station_id))
+head(m12_2020)
 ```
 
 Now we combine all the dataframes into one dataframe.
@@ -151,12 +150,16 @@ Now we combine all the dataframes into one dataframe.
 ```{r}
 total_trips <- bind_rows(m07_2020,m08_2020,m09_2020,m10_2020,m11_2020,m12_2020,m01_2021,
                          m02_2021,m03_2021,m04_2021,m05_2021,m06_2021)
+head(total_trips[which(total_trips$started_at == "01-12-2020 00:01"), ])
 ```
 
 
+```{r}
 ### Step 4: To organize and format and clean the data
 
-Now we will inspect the data and check for any corrupt data.
+#Now we will inspect the data and check for any corrupt data.
+```
+
 
 ```{r}
 colnames(total_trips)
@@ -221,19 +224,12 @@ summary(total_trips)
 We can see a lot of NA values are present. We will take that out using the drop_na() function.
 
 ```{r}
+paste("Number of Rows",nrow(total_trips))
 paste("Number of Missing Values", sum(is.na(total_trips)))
 total_trips <-total_trips %>%
   drop_na()
 paste("Number of Missing Values", sum(is.na(total_trips)))
 paste("Number of Rows",nrow(total_trips))
-```
-Now we will check summary again to check if there are any NA values in the table
-
-```{r}
-str(total_trips)
-dim(total_trips)
-nrow(total_trips)
-tail(total_trips)
 ```
 
 #### Removing bad data from the table
@@ -243,6 +239,7 @@ Since we are removing data we will create a new data frame; total_trips_v2
 
 ```{r}
 total_trips_v2 <- total_trips[!(total_trips$ride_length<0),]
+head(total_trips_v2)
 
 ```
 
@@ -297,16 +294,16 @@ tail(total_trips_v2)
 
 ```
 
-```{r}
-#renaming months from numbers to their respective names:
-month.abb[as.numeric(total_trips_v2$month)]
-
-total_trips_v2$month <- month.abb[as.numeric(total_trips_v2$month)]
-head(total_trips_v2[which(total_trips_v2$month == "Sep"), ])
-```
-##### iii) Finding ride_length with respect to weekend vs weekdays:
+##### iii) Finding number of rides with respect to weekend vs weekdays:
 ```{r}
 total_trips_v2 %>%
+  mutate(day_type = ifelse(day_of_week %in% c("Saturday","Sunday"),"Weekend","Weekday")) %>%
+  group_by(member_casual, day_type) %>%
+  summarize(number_of_rides = n())
+```
+##### iv) Finding ride_length with respect to weekend vs weekdays:
+```{r}
+rides_per_weekend <- total_trips_v2 %>%
     # create variable to indicate weekend or not (check the weekend day names)
     mutate(day_type = ifelse(day_of_week %in% c("Saturday", "Sunday"), "WEEKEND","WEEK")) %>%
     # build gouping by member type and day type
@@ -316,7 +313,7 @@ total_trips_v2 %>%
 
 
 ```
-##### iv) Finding number of rides for everyday with respect to member type:
+##### v) Finding number of rides for everyday with respect to member type:
 
 ```{r}
 
@@ -329,25 +326,30 @@ total_trips_v2 %>%
   arrange(member_casual, weekday) # sorts
 ```
 
-##### v) Finding number of rides with respect to weekend vs weekdays:
-```{r}
-total_trips_v2 %>%
-  mutate(day_type = ifelse(day_of_week %in% c("Saturday","Sunday"),"Weekend","Weekday")) %>%
-  group_by(member_casual, day_type) %>%
-  summarize(number_of_rides = n())
-  
-```
-
 ##### vi) Finding number of rides for every month with respect member types:
 ```{r}
 total_trips_v2 %>%
   group_by(member_casual, month) %>%
+  arrange(member_casual,month) %>%
+  arrange(month, member_casual) %>%
   summarize(number_of_rides = n())
+
 ```
-##### vi) Finding the top 6 most used started and end stations for casual users:
+```{r}
+rides_per_month <-total_trips_v2 %>% 
+  mutate(month = month(started_at, label = TRUE)) %>%  
+  group_by(member_casual, month) %>%                  
+  summarise(number_of_rides = n()                      
+  ,average_duration = mean(ride_length)) %>%          
+  arrange(member_casual, month)
+
+```
+
+
+##### vii) Finding the top 6 most used started and end stations for casual users:
 
 ```{r}
-total_trips_v2 %>%
+top_5_start_stations <- total_trips_v2 %>%
   group_by(member_casual="casual", start_station_name) %>%
   summarize(number_of_rides =n()) %>%
   arrange(desc(number_of_rides)) %>%
@@ -355,26 +357,33 @@ total_trips_v2 %>%
 
 # similarly top 6 most end stations:
 
-total_trips_v2 %>%
+top_5_end_stations<- total_trips_v2 %>%
   group_by(member_casual="casual", end_station_name) %>%
   summarize(number_of_rides =n()) %>%
   arrange(desc(number_of_rides)) %>%
   head()
+
+view(top_5_start_stations)
   
 ```
+
+```{r}
+which(is.na(total_trips_v2$end_station_name), arr.ind=TRUE)
+```
+
 ### Using the analysed data for Vizualisations: 
 
 ##### i) visualize the number of rides by rider type
 
 ```{r}
-
+library(scales)
 total_trips_v2 %>%
   mutate(weekday = wday(started_at, label = TRUE)) %>%
   group_by(member_casual, weekday) %>%
   summarise(number_of_rides = n(),average_duration = mean(ride_length)) %>%
   arrange(member_casual, weekday) %>%
   ggplot(aes(x = weekday, y = number_of_rides, fill = member_casual)) +
-  geom_col(position = "dodge")+ scale_y_continuous(name="Number of rides") +
+  geom_col(position = "dodge")+ scale_y_continuous(labels=comma, name="Number of rides") +
   scale_x_discrete(name="Day of the week") +
 theme(axis.text.x = element_text(face="bold", color="#008000",
                            size=8, angle=0),
@@ -437,10 +446,11 @@ theme(axis.text.x = element_text(face="bold", color="#008000",
 ```{r}
 #Finding number of rides for every month with respect member types:
    total_trips_v2 %>%
+  mutate(month = month(started_at, label = TRUE)) %>%
   group_by(member_casual, month) %>%
   summarize(number_of_rides = n()) %>%
 ggplot(aes(x = month, y = number_of_rides, fill = member_casual)) +
-geom_col(position = "dodge")+ 
+geom_col(position = "dodge")+ scale_y_continuous(labels=comma, name= "number of rides") +
 theme(axis.text.x = element_text(face="bold", color="#008000",
                            size=8, angle=0),
           axis.text.y = element_text(face="bold", color="#008000",
@@ -454,31 +464,14 @@ total_trips_v2 %>%
   group_by(member_casual, day_type) %>%
   summarize(number_of_rides = n()) %>%
   ggplot(aes(x = day_type, y = number_of_rides, fill = member_casual)) +
-geom_col(position = "dodge") +
+geom_col(position = "dodge") + scale_y_continuous(labels=comma, name="Number of rides") +
+  scale_x_discrete(name= "day type") +
 theme(axis.text.x = element_text(face="bold", color="#008000",
                            size=8, angle=0),
           axis.text.y = element_text(face="bold", color="#008000",
                            size=8, angle=0))        
 ```
-```{r}
-#Finding number of rides for everyday with respect to member type:
 
-# analyze ridership data by type and weekday
-num_of_rides <- total_trips_v2 %>%
-  mutate(weekday = wday(started_at, label = TRUE)) %>% #creates weekday field using
-  group_by(member_casual, weekday) %>% #groups by usertype and weekday
-  summarise(number_of_rides = n(), #calculates the number of rides and average duration
-  average_duration = mean(ride_length)) %>% # calculates the average duration
-  arrange(member_casual, weekday) %>%
-  ggplot(aes(x=weekday, y= number_of_rides, fill= member_casual)) +
-  geom_col(position ="Dodge") + scale_y_continuous(name="Number of rides") +
-  scale_x_discrete(name="Day of the week") +
-theme(axis.text.x = element_text(face="bold", color="#008000",
-                           size=8, angle=0),
-          axis.text.y = element_text(face="bold", color="#008000",
-                           size=8, angle=0))        
-num_of_rides
-```
 ```{r}
 #finding the ride_length in terms of days of the week in respect to member types:
 
@@ -488,16 +481,15 @@ ride_length_day <- aggregate(total_trips_v2$ride_length ~ total_trips_v2$member_
 ### Step 6: Sharing the data (Act)
 
 ```{r}
-# Creating a csv file that we will visualize in Excel.
+# Creating a csv file that we will visualize in Excel and Tableu.
 
 counts <- aggregate(total_trips_v2$ride_length ~ total_trips_v2$member_casual +
 total_trips_v2$day_of_week, FUN = mean)
 write.csv(counts, "C:/Users/sarthak.shiben.dev/Desktop/Case Study/avg_ride_length.csv")
 write.csv(top_5_start_stations, "C:/Users/sarthak.shiben.dev/Desktop/Case Study/start_stations.csv")
 write.csv(top_5_end_stations, "C:/Users/sarthak.shiben.dev/Desktop/Case Study/end_stations.csv")
-write.csv(num_of_rides, "C:/Users/sarthak.shiben.dev/Desktop/Case Study/num_of_rides.csv")
 write.csv(rides_per_weekend, "C:/Users/sarthak.shiben.dev/Desktop/Case Study/rides_per_weekend.csv")
-write.csv(ride_per_month, "C:/Users/sarthak.shiben.dev/Desktop/Case Study/ride_per_month.csv")
+write.csv(rides_per_month, "C:/Users/sarthak.shiben.dev/Desktop/Case Study/rides_per_month.csv")
 
 ```
 
@@ -505,14 +497,16 @@ write.csv(ride_per_month, "C:/Users/sarthak.shiben.dev/Desktop/Case Study/ride_p
 Looking into the data visualizations we can observe the following things:
 1. Number of rides spike up during the weekends for the casual members where as annual members remain consistent through out the week.
 2. We can see the top most picked up and dropped of stations.
-3. Number of rides touch their peak during the August month.
-4. Ride length also is also the highest at the weekends.
+3. Number of rides touch their peak during the June month.
+4. Ride length also is also the highest at the weekends but almost consistent throughout the week.
+5. Ride length is consistent for the annual members through out the week indicating that they are mostly using it for daily commute as going to work.
+6. We see a steep fall in the number of rides for annual members when the weekend starts, stating again that their major use is to commute to work.
 
 #### Recommendations based on the analysis:
 1.We should have a weekend plan for the casual members where they can use the bikes just for the weekend at an affordable rates.
 2.The top 5 start and end station for the casual members should be advertised even more for annual membership as those are the place where casual members are there the most.
-3.August month overall should be used more for promotion in general as it observes the most use of the bikes.
+3.June month overall should be used more for promotion in general as it observes the most use of the bikes.
 4.Seasonal membership can also be offered as we see rise in usage during the summer season.
-5.
+5.Since we see that the ride length is almost consistent through out the week for casual members, we can have some ride duration based subscription which will be at discounted price for per hour or per two hours per session, encouraging them to use it more often.
 
 
