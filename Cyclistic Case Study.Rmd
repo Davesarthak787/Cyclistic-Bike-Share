@@ -362,9 +362,6 @@ top_5_end_stations<- total_trips_v2 %>%
   summarize(number_of_rides =n()) %>%
   arrange(desc(number_of_rides)) %>%
   head()
-
-view(top_5_start_stations)
-  
 ```
 
 ```{r}
@@ -457,27 +454,6 @@ theme(axis.text.x = element_text(face="bold", color="#008000",
                            size=8, angle=0))        
 ```
 
-```{r}
-# Finding number of rides with respect to weekend vs weekdays:
-total_trips_v2 %>%
-  mutate(day_type = ifelse(day_of_week %in% c("Saturday","Sunday"),"Weekend","Weekday")) %>%
-  group_by(member_casual, day_type) %>%
-  summarize(number_of_rides = n()) %>%
-  ggplot(aes(x = day_type, y = number_of_rides, fill = member_casual)) +
-geom_col(position = "dodge") + scale_y_continuous(labels=comma, name="Number of rides") +
-  scale_x_discrete(name= "day type") +
-theme(axis.text.x = element_text(face="bold", color="#008000",
-                           size=8, angle=0),
-          axis.text.y = element_text(face="bold", color="#008000",
-                           size=8, angle=0))        
-```
-
-```{r}
-#finding the ride_length in terms of days of the week in respect to member types:
-
-ride_length_day <- aggregate(total_trips_v2$ride_length ~ total_trips_v2$member_casual+total_trips_v2$day_of_week, FUN=mean) 
-
-```
 ### Step 6: Sharing the data (Act)
 
 ```{r}
@@ -495,6 +471,7 @@ write.csv(rides_per_month, "C:/Users/sarthak.shiben.dev/Desktop/Case Study/rides
 
 
 Looking into the data visualizations we can observe the following things:
+
 1. Number of rides spike up during the weekends for the casual members where as annual members remain consistent through out the week.
 2. We can see the top most picked up and dropped of stations.
 3. Number of rides touch their peak during the June month.
@@ -508,5 +485,4 @@ Looking into the data visualizations we can observe the following things:
 3.June month overall should be used more for promotion in general as it observes the most use of the bikes.
 4.Seasonal membership can also be offered as we see rise in usage during the summer season.
 5.Since we see that the ride length is almost consistent through out the week for casual members, we can have some ride duration based subscription which will be at discounted price for per hour or per two hours per session, encouraging them to use it more often.
-
-
+6. As we see that the casual riders use the service more on the weekends, we can offer some discounted subscription for them if they use it on the weekdays, urging them to use it more on the weekdays.
